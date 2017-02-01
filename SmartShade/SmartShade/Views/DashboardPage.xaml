@@ -1,0 +1,196 @@
+﻿<Page x:Class="SmartShade.Views.DashboardPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:SmartShade.Views"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:dataVisualization="using:Telerik.UI.Xaml.Controls.DataVisualization"
+      xmlns:viewModels="using:SmartShade.ViewModels"
+      xmlns:template10Converters="using:Template10.Converters"
+      xmlns:converters="using:SmartShade.Converters"
+      mc:Ignorable="d">
+
+    <Page.DataContext>
+        <viewModels:DashboardViewModel x:Name="ViewModel" />
+    </Page.DataContext>
+
+    <Page.Resources>
+        <converters:BoolToButtonStateConverter x:Key="ButtonStateConverter" />
+        <template10Converters:StringFormatConverter x:Key="FormatConverter" />
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="HeaderGrid"
+              Background="{ThemeResource SystemControlForegroundAccentBrush}"
+              Height="48">
+            <TextBlock Text="Dashboard"
+                       HorizontalAlignment="Center"
+                       Foreground="White"
+                       Style="{StaticResource SubheaderTextBlockStyle}" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1">
+            <Grid x:Name="TelemetryGrid"
+                  Margin="20,20,20,0">
+                <StackPanel>
+                    <Grid x:Name="OtherGrid"
+                          Margin="0,0,0,10"
+                          Padding="10"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Acceleromter Positions: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding AcclerometerReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Button 18: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding IsButton18Pressed, Converter={StaticResource ButtonStateConverter}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Button 22: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding IsButton22Pressed, Converter={StaticResource ButtonStateConverter}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="LEDs: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding AreLedsOn}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Analog Pin1 Reading: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding AnalogReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid x:Name="MotorGrid"
+                          Margin="0,0,0,10"
+                          Padding="10"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Servo 1 Position: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding Servo1Position, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Servo 2 Position: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding Servo2Position, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Motor A Speed: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding MotorASpeed, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Motor B Speed: "
+                                           Margin="0,0,5,0" />
+                                <TextBlock Text="{Binding MotorBSpeed, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <dataVisualization:RadRadialGauge Height="200"
+                                                          Width="200"
+                                                          Grid.Column="1"
+                                                          MinValue="0"
+                                                          MaxValue="180"
+                                                          MaxAngle="180"
+                                                          MinAngle="0">
+                            <dataVisualization:ArrowGaugeIndicator Brush="CornflowerBlue"
+                                                                   Thickness="3"
+                                                                   ArrowTailRadius="2"
+                                                                   Value="{Binding Servo1Position}" />
+                            <dataVisualization:RadialBarGaugeIndicator Value="{Binding Servo2Position}"
+                                                                       Brush="DeepSkyBlue"
+                                                                       Thickness="5"
+                                                                       Margin="10" />
+                        </dataVisualization:RadRadialGauge>
+                    </Grid>
+
+                    <Grid x:Name="LightLevelGrid"
+                          Margin="0,0,0,10"
+                          Padding="10"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}">
+                        <dataVisualization:RadLinearGauge MaxValue="1"
+                                                          TickStep="0.1"
+                                                          Height="100">
+                            <dataVisualization:SegmentedLinearGaugeIndicator Value="{Binding LightLevelReading}">
+                                <dataVisualization:BarIndicatorSegment Stroke="Green"
+                                                                       Length="3" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Yellow"
+                                                                       Length="2" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Red"
+                                                                       Length="1" />
+                            </dataVisualization:SegmentedLinearGaugeIndicator>
+                        </dataVisualization:RadLinearGauge>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Light Level: "
+                                       Margin="0,0,5,0" />
+                            <TextBlock Text="{Binding LightLevelReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid x:Name="TempGrid"
+                          Margin="0,0,0,10"
+                          Padding="10"
+                          BorderThickness="2"
+                          CornerRadius="5"
+                          BorderBrush="{ThemeResource ApplicationForegroundThemeBrush}">
+                        <dataVisualization:RadLinearGauge x:Name="TempGauge"
+                                                          MaxValue="150"
+                                                          Height="80">
+                            <dataVisualization:SegmentedLinearGaugeIndicator Value="{Binding TemperatureReading}">
+                                <dataVisualization:BarIndicatorSegment Stroke="Green"
+                                                                       Length="3" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Yellow"
+                                                                       Length="2" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Red"
+                                                                       Length="1" />
+                            </dataVisualization:SegmentedLinearGaugeIndicator>
+                        </dataVisualization:RadLinearGauge>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Temperature:"
+                                       Margin="0,0,5,0" />
+                            <TextBlock Text="{Binding TemperatureReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <CommandBar Grid.Row="2">
+            <AppBarToggleButton IsChecked="{Binding IsMonitoring, Mode=TwoWay}"
+                                Icon="Remote"
+                                Label="Monitoring" />
+        </CommandBar>
+    </Grid>
+</Page>

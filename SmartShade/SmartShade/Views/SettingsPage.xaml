@@ -1,0 +1,32 @@
+﻿<Page
+    x:Class="SmartShade.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartShade.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dataVisualization="using:Telerik.UI.Xaml.Controls.DataVisualization"
+    mc:Ignorable="d">
+    
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <!--<Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>-->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="HeaderGrid"
+              Background="{ThemeResource SystemControlForegroundAccentBrush}"
+              Height="48">
+            <TextBlock Text="Settings"
+                       HorizontalAlignment="Center"
+                       Foreground="White"
+                       Style="{StaticResource SubheaderTextBlockStyle}" />
+        </Grid>
+
+    </Grid>
+</Page>
