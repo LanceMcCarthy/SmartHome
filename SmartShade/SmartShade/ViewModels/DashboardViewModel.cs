@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Navigation;
 using GHIElectronics.UWP.Shields;
 using SmartShade.Converters;
+using SmartShade.Models;
 using Template10.Mvvm;
 
 namespace SmartShade.ViewModels
@@ -15,6 +16,7 @@ namespace SmartShade.ViewModels
     {
         private FEZHAT hat;
         private DispatcherTimer timer;
+
         private int i;
         private double lightLevelReading = 60;
         private double temperatureReading = 30;
@@ -28,14 +30,20 @@ namespace SmartShade.ViewModels
         private double servo1Position = 100;
         private double servo2Position = 45;
         private bool isMonitoring;
-        private Random rand;
+        //private Random rand;
+        private ObservableCollection<ShadeItemViewModel> shades;
 
         public DashboardViewModel()
         {
-            
+            if (DesignMode.DesignModeEnabled)
+            {
+                Shades.Add(new ShadeItemViewModel(hat.MotorA, 5, "Office Left"));
+            }
         }
 
         #region Properties
+
+        public ObservableCollection<ShadeItemViewModel> Shades => shades ?? (shades = new ObservableCollection<ShadeItemViewModel>());
 
         public double LightLevelReading
         {
@@ -82,8 +90,16 @@ namespace SmartShade.ViewModels
         public double MotorASpeed
         {
             get { return motorASpeed; }
-            set { Set(ref motorASpeed, value); }
+            set
+            {
+                // Determines if we need to reverse the motor direction
+                var updatedValue = MotorADirection ? value : -value;
+                
+                Set(ref motorASpeed, updatedValue);
+            }
         }
+
+        public bool MotorADirection { get; set; }
 
         public double MotorBSpeed
         {
@@ -109,9 +125,9 @@ namespace SmartShade.ViewModels
             set
             {
                 if (value)
-                    timer.Start();
+                    timer?.Start();
                 else
-                    timer.Stop();
+                    timer?.Stop();
 
                 Set(ref isMonitoring, value);
             }
@@ -127,11 +143,14 @@ namespace SmartShade.ViewModels
         {
             hat = await FEZHAT.CreateAsync();
 
-            hat.S1.SetLimits(500, 2400, 0, 180);
-            hat.S2.SetLimits(500, 2400, 0, 180);
+            //hat.S1.SetLimits(500, 2400, 0, 180);
+            //hat.S2.SetLimits(500, 2400, 0, 180);
 
-            rand = new Random();
+            Shades.Add(new ShadeItemViewModel(hat.MotorA, 5, "Office Left", hat.D2));
+            
+            //rand = new Random();
 
+            // Main Timer
             timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             timer.Tick += OnTick;
         }
@@ -152,70 +171,74 @@ namespace SmartShade.ViewModels
 
             var celcius = hat.GetTemperature();
             TemperatureReading = UseCelcius ? celcius : ConvertTemp.ConvertCelsiusToFahrenheit(celcius);
+            
+            // ----------- Servos ----------- //
 
-            // LEDs
+            //if (IsButton18Pressed)
+            //{
+            //    hat.S1.Position += 5.0;
+            //    hat.S2.Position += 5.0;
 
-            if (i++ % 5 == 0)
+            //    if (hat.S1.Position >= 180.0)
+            //    {
+            //        hat.S1.Position = 0.0;
+            //        hat.S2.Position = 0.0;
+            //    }
+            //}
+
+            //Servo1Position = hat.S1.Position;
+            //Servo2Position = hat.S2.Position;
+
+
+            // ----------- Motors ----------- //
+
+            if (IsButton18Pressed)
             {
-                hat.DIO24On = AreLedsOn;
-                
-                hat.WriteDigital(FEZHAT.DigitalPin.DIO16, AreLedsOn);
-                hat.WriteDigital(FEZHAT.DigitalPin.DIO26, AreLedsOn);
+                //Shades[0].Motor.Speed = MotorASpeed;
+                //Shades[0].RgbLed.Color = new FEZHAT.Color((byte)rand.Next(0, 255), (byte)rand.Next(0, 255), (byte)rand.Next(0, 255));
+                //hat.D2.Color = new FEZHAT.Color((byte)rand.Next(0, 255), (byte)rand.Next(0, 255), (byte)rand.Next(0, 255));
 
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm5, AreLedsOn ? 1.0 : 0.0);
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm6, AreLedsOn ? 1.0 : 0.0);
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm7, AreLedsOn ? 1.0 : 0.0);
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm11, AreLedsOn ? 1.0 : 0.0);
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm12, AreLedsOn ? 1.0 : 0.0);
-
-                AreLedsOn = !AreLedsOn;
-            }
-
-            // Servos
-
-            if (hat.IsDIO18Pressed())
-            {
-                hat.S1.Position += 5.0;
-                hat.S2.Position += 5.0;
-
-                if (hat.S1.Position >= 180.0)
-                {
-                    hat.S1.Position = 0.0;
-                    hat.S2.Position = 0.0;
-                }
-            }
-
-            Servo1Position = hat.S1.Position;
-            Servo2Position = hat.S2.Position;
-
-            // Motors
-
-            if (hat.IsDIO22Pressed())
-            {
-                if (Math.Abs(hat.MotorA.Speed) < 0.05)
-                {
-                    hat.MotorA.Speed = 0.5;
-                    hat.MotorB.Speed = -0.7;
-                }
-
-                hat.D2.Color = new FEZHAT.Color((byte)rand.Next(0, 255), (byte)rand.Next(0, 255), (byte)rand.Next(0, 255));
-                hat.D3.Color = new FEZHAT.Color((byte)rand.Next(0, 255), (byte)rand.Next(0, 255), (byte)rand.Next(0, 255));
+                Shades[0]?.Open();
             }
             else
             {
-                if (Math.Abs(hat.MotorA.Speed) > 0.05)
-                {
-                    hat.MotorA.Speed = 0.0;
-                    hat.MotorB.Speed = 0.0;
-                }
-
-                hat.D2.Color = FEZHAT.Color.Black;
-                hat.D3.Color = FEZHAT.Color.Black;
+                //Shades[0].Motor.Speed = 0.0;
+                //hat.D2.Color = FEZHAT.Color.Black;
             }
 
-            MotorASpeed = hat.MotorA.Speed;
-            MotorBSpeed = hat.MotorB.Speed;
+            if (IsButton22Pressed)
+            {
+                //Shades[1].Motor.Speed = MotorBSpeed;
+                //hat.D3.Color = new FEZHAT.Color((byte)rand.Next(0, 255), (byte)rand.Next(0, 255), (byte)rand.Next(0, 255));
+
+                Shades[0]?.Close();
+            }
+            else
+            {
+                //Shades[1].Motor.Speed = 0.0;
+                //hat.D3.Color = FEZHAT.Color.Black;
+            }
+
+
+            // ----------- LEDs and Pins ----------- //
+
+            //if (i++ % 5 == 0)
+            //{
+            //    hat.DIO24On = AreLedsOn;
+
+            //    hat.WriteDigital(FEZHAT.DigitalPin.DIO16, AreLedsOn);
+            //    hat.WriteDigital(FEZHAT.DigitalPin.DIO26, AreLedsOn);
+
+            //    hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm5, AreLedsOn ? 1.0 : 0.0);
+            //    hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm6, AreLedsOn ? 1.0 : 0.0);
+            //    hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm7, AreLedsOn ? 1.0 : 0.0);
+            //    hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm11, AreLedsOn ? 1.0 : 0.0);
+            //    hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm12, AreLedsOn ? 1.0 : 0.0);
+
+            //    AreLedsOn = !AreLedsOn;
+            //}
         }
+        
 
         public override Task OnNavigatedToAsync(object parameter, NavigationMode mode, IDictionary<string, object> state)
         {
