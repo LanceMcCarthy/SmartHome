@@ -1,58 +1,53 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using Windows.UI.Xaml;
 using GHIElectronics.UWP.Shields;
 using Template10.Mvvm;
 
 namespace SmartShade.Models
 {
+    [DataContract]
     public class ShadeItemViewModel : ViewModelBase, IDisposable
     {
         #region Fields
 
-        private string windowLocation;
-        private FEZHAT.Motor motor;
+        private string windowName;
+        private FEZHAT.Motor shadeMotor;
         private FEZHAT.RgbLed rgbLed;
-        private double speedCoefficient = 1;
-        private int operationDuration;
-
-        private DispatcherTimer operationTimer;
-        private double speed;
+        private double motorSpeed; // ranges from -1 to 1, 0 is full stop
+        private double speedCoefficient = 1; // this can be used to tweak the speed
+        private double operationDuration;
         private string currentStatus;
+        private double shadePosition;
         private bool isOperating;
-        private double operationProgress;
+        private bool isShadeOpen = true;
+
         private DelegateCommand openCommand;
         private DelegateCommand closeCommand;
         private DelegateCommand cancelCommand;
-        private bool isOpen;
+
+        private DispatcherTimer operationTimer;
+        private double operationProgress;
 
         #endregion
 
         #region CTORs
-
-        public ShadeItemViewModel(FEZHAT.Motor motor, int operationDuration)
+        
+        public ShadeItemViewModel(FEZHAT.Motor shadeMotor, int operationDuration, string windowName)
         {
-            this.motor = motor;
+            this.shadeMotor = shadeMotor;
             this.operationDuration = operationDuration;
+            this.windowName = windowName;
 
             operationTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
             operationTimer.Tick += OperationTimer_Tick;
         }
 
-        public ShadeItemViewModel(FEZHAT.Motor motor, int operationDuration, string windowLocation)
+        public ShadeItemViewModel(FEZHAT.Motor shadeMotor, int operationDuration, string windowName, FEZHAT.RgbLed rgbLed)
         {
-            this.motor = motor;
+            this.shadeMotor = shadeMotor;
             this.operationDuration = operationDuration;
-            this.windowLocation = windowLocation;
-
-            operationTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
-            operationTimer.Tick += OperationTimer_Tick;
-        }
-
-        public ShadeItemViewModel(FEZHAT.Motor motor, int operationDuration, string windowLocation, FEZHAT.RgbLed rgbLed)
-        {
-            this.motor = motor;
-            this.operationDuration = operationDuration;
-            this.windowLocation = windowLocation;
+            this.windowName = windowName;
             this.rgbLed = rgbLed;
 
             operationTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
@@ -62,23 +57,17 @@ namespace SmartShade.Models
         #endregion
 
         #region Properties
-
-        public bool IsOpen
+        
+        public string WindowName
         {
-            get { return isOpen; }
-            set { Set(ref isOpen, value); }
+            get { return windowName; }
+            set { Set(ref windowName, value); }
         }
 
-        public string WindowLocation
+        public FEZHAT.Motor ShadeMotor
         {
-            get { return windowLocation; }
-            set { Set(ref windowLocation, value); }
-        }
-
-        public FEZHAT.Motor Motor
-        {
-            get { return motor; }
-            set { Set(ref motor, value); }
+            get { return shadeMotor; }
+            set { Set(ref shadeMotor, value); }
         }
 
         public FEZHAT.RgbLed RgbLed
@@ -87,13 +76,13 @@ namespace SmartShade.Models
             set { Set(ref rgbLed, value); }
         }
 
-        public double Speed
+        public double MotorSpeed
         {
-            get { return speed; }
+            get { return motorSpeed; }
             private set
             {
-                Motor.Speed = value;
-                Set(ref speed, value);
+                ShadeMotor.Speed = value;
+                Set(ref motorSpeed, value);
             }
         }
 
@@ -103,7 +92,7 @@ namespace SmartShade.Models
             set { Set(ref speedCoefficient, value); }
         }
 
-        public int OperationDuration
+        public double OperationDuration
         {
             get { return operationDuration; }
             set { Set(ref operationDuration, value); }
@@ -115,16 +104,22 @@ namespace SmartShade.Models
             set { Set(ref currentStatus, value); }
         }
 
-        public double OperationProgress
+        public double ShadePosition
         {
-            get { return operationProgress; }
-            set { Set(ref operationProgress, value); }
+            get { return shadePosition; }
+            set { Set(ref shadePosition, value); }
         }
 
         public bool IsOperating
         {
             get { return isOperating; }
             set { Set(ref isOperating, value); }
+        }
+
+        public bool IsShadeOpen
+        {
+            get { return isShadeOpen; }
+            set { Set(ref isShadeOpen, value); }
         }
 
         #endregion
@@ -143,57 +138,74 @@ namespace SmartShade.Models
 
         public void Open()
         {
-            Speed = +Speed;
-            RgbLed.Color = new FEZHAT.Color(0, 255, 0);
-            CurrentStatus = "Opening...";
-
+            if (RgbLed != null)
+                RgbLed.Color = new FEZHAT.Color(0, 255, 0);
+            
+            MotorSpeed = 1 * speedCoefficient;
             IsOperating = true;
             operationTimer.Start();
         }
 
         public void Close()
         {
-            Speed = -Speed;
-            RgbLed.Color = new FEZHAT.Color(255, 0, 0);
-            CurrentStatus = "Closing...";
-
+            if (RgbLed != null)
+                RgbLed.Color = new FEZHAT.Color(255, 0, 0);
+            
+            MotorSpeed = -1 * speedCoefficient;
             IsOperating = true;
             operationTimer.Start();
         }
 
         public void Stop()
         {
-            Speed = 0;
-            OperationProgress = 0;
-            rgbLed.Color = FEZHAT.Color.Black;
-
-            operationTimer.Stop();
-
+            RgbLed?.TurnOff();
+            MotorSpeed = 0;
             IsOperating = false;
+            operationTimer.Stop();
         }
 
         private void OperationTimer_Tick(object sender, object e)
         {
-            OperationProgress = OperationProgress + 0.1;
+            // Increment the progress counter
+            operationProgress = operationProgress + 0.1;
 
-            if (OperationProgress < OperationDuration)
+            // Calculate the percentage complete
+            int percentComplete = Convert.ToInt16(Math.Ceiling((operationProgress / operationDuration) * 100));
+
+            // This is to move the slider to visualize the shade's current position
+            // eventually it will be used for a window animation
+            UpdateShadePosition(percentComplete);
+
+            if (percentComplete < 100)
             {
-                Speed = 1 * speedCoefficient;
+                var operation = IsShadeOpen ? "Closing" : "Opening";
+                CurrentStatus = $"{operation} - {percentComplete}% Complete";
             }
-            else if (Math.Abs(OperationProgress - OperationDuration) < 0.05)
+            else if (percentComplete == 100)
             {
-                Speed = 1 * speedCoefficient;
-                IsOpen = !IsOpen;
-            }
-            else
-            {
+                operationProgress = 0;
+
+                // toggle completion
+                IsShadeOpen = !IsShadeOpen; 
+
+                // update status
+                CurrentStatus = IsShadeOpen ? "Open" : "Closed";
+
                 Stop();
             }
+        }
+        
+        private void UpdateShadePosition(double percentComplete)
+        {
+            if (IsShadeOpen)
+                ShadePosition = percentComplete;
+            else
+                ShadePosition = 100 - percentComplete;
         }
 
         public void Dispose()
         {
-            Speed = 0;
+            MotorSpeed = 0;
             RgbLed.Color = FEZHAT.Color.Black;
 
             if (operationTimer.IsEnabled)
@@ -204,7 +216,7 @@ namespace SmartShade.Models
             operationTimer.Tick -= OperationTimer_Tick;
             operationTimer = null;
 
-            motor.Dispose();
+            shadeMotor.Dispose();
         }
         
         #endregion
