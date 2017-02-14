@@ -23,6 +23,134 @@
         <converters:BoolToVisibilityConverter x:Key="InvertedBoolToVisibilityConverter"
                                               IsInverted="True" />
         <template10Converters:StringFormatConverter x:Key="FormatConverter" />
+        
+        <DataTemplate x:Key="ShadeItemTemplate">
+            <Grid Margin="10"
+                  Background="{ThemeResource AppBarBackground}"
+                  MinWidth="280"
+                  Height="200">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Background="{ThemeResource GridViewItemForeground}"
+                      Grid.ColumnSpan="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="{Binding WindowName}"
+                               Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                               Style="{StaticResource TitleTextBlockStyle}"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="10,0"
+                               HorizontalAlignment="Center" />
+
+                    <Button x:Name="SettingsButton"
+                            Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+                            HorizontalAlignment="Right"
+                            Grid.Column="1">
+                        <SymbolIcon Symbol="Setting" />
+                        <Button.Flyout>
+                            <Flyout>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+
+                                    <input:RadNumericBox Header="Motor Operation Duration"
+                                                         Minimum="1"
+                                                         Maximum="60"
+                                                         SmallChange="1"
+                                                         LargeChange="5"
+                                                         Value="{Binding OperationDuration, Mode=TwoWay}" />
+
+                                    <input:RadNumericBox Header="Motor Speed Coefficient"
+                                                         Minimum="0"
+                                                         Maximum="1"
+                                                         SmallChange="0.1"
+                                                         Value="{Binding SpeedCoefficient, Mode=TwoWay}"
+                                                         Grid.Row="1" />
+                                </Grid>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
+
+                <Grid x:Name="StatusInfoGrid"
+                      Margin="10"
+                      Grid.Row="1">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Status:" />
+                            <TextBlock Text="{Binding CurrentStatus}"
+                                       Margin="5,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Duration (seconds):" />
+                            <TextBlock Text="{Binding OperationDuration}"
+                                       Margin="5,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Current Motor Speed (0-1):" />
+                            <TextBlock Text="{Binding MotorSpeed}"
+                                       Margin="5,0,0,0" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Speed Coefficient (0-1):" />
+                            <TextBlock Text="{Binding SpeedCoefficient}"
+                                       Margin="5,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <Grid x:Name="ButtonsGrid"
+                      Margin="10"
+                      Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Button Content="Open"
+                            Margin="0,0,5,0"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding OpenCommand}"
+                            IsEnabled="{Binding IsShadeOpen, Converter={StaticResource InvertBoolConverter}}"
+                            Visibility="{Binding IsOperating, Converter={StaticResource InvertedBoolToVisibilityConverter}}" />
+
+                    <Button Content="Close"
+                            Margin="5,0,0,0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding CloseCommand}"
+                            IsEnabled="{Binding IsShadeOpen}"
+                            Visibility="{Binding IsOperating, Converter={StaticResource InvertedBoolToVisibilityConverter}}" />
+
+                    <Button Content="Stop"
+                            Grid.ColumnSpan="2"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding CancelCommand}"
+                            IsEnabled="{Binding IsOperating}"
+                            Visibility="{Binding IsOperating, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}" />
+                </Grid>
+
+                <userControls:ShadePositionControl Width="115"
+                                                   Margin="10"
+                                                   ShadePosition="{Binding ShadePosition}"
+                                                   Grid.Column="1"
+                                                   Grid.RowSpan="2"
+                                                   Grid.Row="1" />
+            </Grid>
+        </DataTemplate>
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -46,161 +174,74 @@
               Visibility="Visible"
               Grid.Row="1">
             <GridView ItemsSource="{Binding Shades}"
-                      SelectionMode="None">
-                <GridView.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="10"
-                              Background="{ThemeResource AppBarBackground}"
-                              MinWidth="280"
-                              Height="200">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <Grid Background="{ThemeResource GridViewItemForeground}"
-                                  Grid.ColumnSpan="2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Text="{Binding WindowName}"
-                                           Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                                           Style="{StaticResource TitleTextBlockStyle}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="10,0"
-                                           HorizontalAlignment="Center"/>
-
-                                <Button x:Name="SettingsButton"
-                                        Foreground="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-                                        HorizontalAlignment="Right"
-                                        Grid.Column="1">
-                                    <SymbolIcon Symbol="Setting" />
-                                    <Button.Flyout>
-                                        <Flyout>
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition />
-                                                    <RowDefinition />
-                                                </Grid.RowDefinitions>
-
-                                                <input:RadNumericBox Header="Motor Operation Duration"
-                                                                     Minimum="1"
-                                                                     Maximum="60"
-                                                                     SmallChange="1"
-                                                                     LargeChange="5"
-                                                                     Value="{Binding OperationDuration, Mode=TwoWay}" />
-
-                                                <input:RadNumericBox Header="Motor Speed Coefficient"
-                                                                     Minimum="0"
-                                                                     Maximum="1"
-                                                                     SmallChange="0.1"
-                                                                     Value="{Binding SpeedCoefficient, Mode=TwoWay}"
-                                                                     Grid.Row="1" />
-                                            </Grid>
-                                        </Flyout>
-                                    </Button.Flyout>
-                                </Button>
-                            </Grid>
-
-                            <Grid x:Name="StatusInfoGrid"
-                                  Margin="10"
-                                  Grid.Row="1">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Status:" />
-                                        <TextBlock Text="{Binding CurrentStatus}"
-                                                   Margin="5,0,0,0" />
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Duration (seconds):" />
-                                        <TextBlock Text="{Binding OperationDuration}"
-                                                   Margin="5,0,0,0" />
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Current Motor Speed (0-1):" />
-                                        <TextBlock Text="{Binding MotorSpeed}"
-                                                   Margin="5,0,0,0" />
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Speed Coefficient (0-1):" />
-                                        <TextBlock Text="{Binding SpeedCoefficient}"
-                                                   Margin="5,0,0,0" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid x:Name="ButtonsGrid"
-                                  Margin="10"
-                                  Grid.Row="2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition />
-                                    <ColumnDefinition />
-                                </Grid.ColumnDefinitions>
-
-                                <Button Content="Open"
-                                        Margin="0,0,5,0"
-                                        HorizontalAlignment="Stretch"
-                                        Command="{Binding OpenCommand}"
-                                        IsEnabled="{Binding IsShadeOpen, Converter={StaticResource InvertBoolConverter}}"
-                                        Visibility="{Binding IsOperating, Converter={StaticResource InvertedBoolToVisibilityConverter}}" />
-
-                                <Button Content="Close"
-                                        Margin="5,0,0,0"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Stretch"
-                                        Command="{Binding CloseCommand}"
-                                        IsEnabled="{Binding IsShadeOpen}"
-                                        Visibility="{Binding IsOperating, Converter={StaticResource InvertedBoolToVisibilityConverter}}" />
-
-                                <Button Content="Stop"
-                                        Grid.ColumnSpan="2"
-                                        HorizontalAlignment="Stretch"
-                                        Command="{Binding CancelCommand}"
-                                        IsEnabled="{Binding IsOperating}"
-                                        Visibility="{Binding IsOperating, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            </Grid>
-
-                            <userControls:ShadePositionControl Width="115"
-                                                               Margin="10"
-                                                               ShadePosition="{Binding ShadePosition}"
-                                                               Grid.Column="1"
-                                                               Grid.RowSpan="2"
-                                                               Grid.Row="1" />
-
-                            <!--<Grid x:Name="ShadePositionGrid"
-                                  Grid.Column="1"
-                                  Grid.RowSpan="3"
-                                  Grid.Row="0">
-                                <Slider x:Name="ShadePositionBar"
-                                        Orientation="Vertical"
-                                        Margin="10,10,3,10"
-                                        Maximum="100"
-                                        Value="{Binding ShadePosition}"
-                                        IsDirectionReversed="True"
-                                        HorizontalAlignment="Center" />
-                            </Grid>-->
-                        </Grid>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
+                      ItemTemplate="{StaticResource ShadeItemTemplate}"
+                      SelectionMode="None"/>
         </Grid>
 
         <ScrollViewer Grid.Row="2">
             <Grid x:Name="TelemetryGrid"
                   Margin="20,20,20,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
 
-                <Grid x:Name="TempGrid"
+                <StackPanel x:Name="LightPanel" Margin="0,0,10,0">
+                    <dataVisualization:RadLinearGauge x:Name="LightGauge"
+                                                      Height="80"
+                                                      MinValue="0"
+                                                      MaxValue="100"
+                                                      Margin="10,0,10,0">
+                        <dataVisualization:RadLinearGauge.Indicators>
+                            <!--<dataVisualization:LinearBarGaugeIndicator Value="{Binding LightLevelReading}"
+                                                             Brush="Orange"/>-->
+                            <dataVisualization:SegmentedLinearGaugeIndicator Value="{Binding LightLevelReading, Mode=OneWay}">
+                                <dataVisualization:BarIndicatorSegment Stroke="Blue"
+                                                                       Length="1" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Orange"
+                                                                       Length="1" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Yellow"
+                                                                       Length="1" />
+                            </dataVisualization:SegmentedLinearGaugeIndicator>
+                        </dataVisualization:RadLinearGauge.Indicators>
+                    </dataVisualization:RadLinearGauge>
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Top"
+                                HorizontalAlignment="Left">
+                        <TextBlock Text="Light Level: "
+                                   Margin="0,0,5,0" />
+                        <TextBlock Text="{Binding LightLevelReading}"
+                                   Margin="0,0,5,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel x:Name="TempPanel" Margin="10,0,0,0"
+                            Grid.Column="1">
+                    <dataVisualization:RadLinearGauge x:Name="TempGauge"
+                                                      Margin="10,0,10,0"
+                                                      Height="80"
+                                                      MaxValue="150">
+                        <dataVisualization:RadLinearGauge.Indicators>
+                            <dataVisualization:SegmentedLinearGaugeIndicator Value="{Binding TemperatureReading}" >
+                                <dataVisualization:BarIndicatorSegment Stroke="Green"
+                                                                       Length="3" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Yellow"
+                                                                       Length="2" />
+                                <dataVisualization:BarIndicatorSegment Stroke="Red"
+                                                                       Length="1" />
+                            </dataVisualization:SegmentedLinearGaugeIndicator>
+                        </dataVisualization:RadLinearGauge.Indicators>
+                    </dataVisualization:RadLinearGauge>
+
+                    <StackPanel Orientation="Horizontal"
+                                Grid.Row="1">
+                        <TextBlock Text="Temperature:"
+                                   Margin="0,0,5,0" />
+                        <TextBlock Text="{Binding TemperatureReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:N2\}}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!--<Grid x:Name="TempAndLightGrid"
                       Padding="10"
                       BorderThickness="2"
                       CornerRadius="5"
@@ -217,7 +258,19 @@
                                 HorizontalAlignment="Left">
                         <TextBlock Text="Light Level: "
                                    Margin="0,0,5,0" />
-                        <TextBlock Text="{Binding LightLevelReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:P\}}" />
+                        <TextBlock Text="{Binding LightLevelReading, Converter={StaticResource FormatConverter}, ConverterParameter=\{0:P\}}"
+                                   Margin="0,0,5,0" />
+                        <dataVisualization:RadLinearGauge LabelStep="0.2"
+                                                          TickStep="0.1"
+                                                          MinValue="0"
+                                                          MaxValue="1"
+                                                          Height="50"
+                                                          Width="200">
+                            <dataVisualization:LinearBarGaugeIndicator Value="{Binding LightLevelReading}"
+                                                                       Brush="Green"
+                                                                       Thickness="5"
+                                                                       dataVisualization:RadLinearGauge.IndicatorOffset="-10" />
+                        </dataVisualization:RadLinearGauge>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal"
@@ -242,7 +295,7 @@
                             </dataVisualization:SegmentedLinearGaugeIndicator>
                         </dataVisualization:RadLinearGauge.Indicators>
                     </dataVisualization:RadLinearGauge>
-                </Grid>
+                </Grid>-->
             </Grid>
         </ScrollViewer>
 

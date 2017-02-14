@@ -92,22 +92,21 @@ namespace SmartShade.ViewModels
 
         private void OnTick(object sender, object e)
         {
-            LightLevelReading = hat.GetLightLevel();
-            
-            TemperatureReading = ConvertTemp.ConvertCelsiusToFahrenheit(hat.GetTemperature());
-            
             // Status LEDs
-
             if (i++ % 5 == 0) // this is true every 500ms
             {
-                // an LED I'll put some where on the external enclosure
-                hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm6, AreLedsOn ? 1.0 : 0.0);
+                // If you want an LED some where on the external enclosure, use a PWN PIN
+                //hat.SetPwmDutyCycle(FEZHAT.PwmPin.Pwm6, AreLedsOn ? 1.0 : 0.0);
 
                 // On-board LED
                 hat.DIO24On = AreLedsOn;
                 
                 AreLedsOn = !AreLedsOn;
             }
+
+            LightLevelReading = hat.GetLightLevel() * 100;
+
+            TemperatureReading = ConvertTemp.ConvertCelsiusToFahrenheit(hat.GetTemperature());
         }
 
         public override async Task OnNavigatedToAsync(object parameter, NavigationMode mode, IDictionary<string, object> state)
